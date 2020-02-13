@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.Graph;
@@ -40,8 +41,8 @@ namespace OneDriveCleaner
 				.Request();
 			var driveResponse = await driveRequest.GetAsync();
 
-			var total = driveResponse.Quota.Total;
-			var used = driveResponse.Quota.Used;
+			var used = Math.Round(driveResponse.Quota.Used.Value / Math.Pow(2, 30), 0);
+			Console.WriteLine($"Drive contains {used} GB of data");
 		}
 	}
 }

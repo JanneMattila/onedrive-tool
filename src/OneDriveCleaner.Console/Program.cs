@@ -1,10 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Net.Http.Headers;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Graph;
-using Microsoft.Identity.Client;
 
 namespace OneDriveCleaner.Console
 {
