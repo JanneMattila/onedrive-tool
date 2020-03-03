@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using CsvHelper;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
 
@@ -11,7 +14,7 @@ namespace OneDriveCleaner
     {
 		private string _accessToken;
 		private GraphServiceClient _graphserviceClient;
-		private List<DriveItem> _items = new List<DriveItem>();
+		private List<File> _items = new List<File>();
 
 		public OneDriveManager()
 		{
@@ -52,10 +55,14 @@ namespace OneDriveCleaner
 				.Root
 				.Children
 				.Request();
-			await ProcessFiles(rootRequest);
+			await ProcessFiles(rootRequest, string.Empty);
+
+			using var writer = new StreamWriter("files.csv");
+			using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+			csv.WriteRecords(_items);
 		}
 
-		private async Task ProcessFiles(IDriveItemChildrenCollectionRequest childrenCollectionRequest)
+		private async Task ProcessFiles(IDriveItemChildrenCollectionRequest childrenCollectionRequest, string path)
 		{
 			var driveItems = await childrenCollectionRequest.GetAsync();
 			var items = new List<DriveItem>(driveItems.CurrentPage);
@@ -66,6 +73,7 @@ namespace OneDriveCleaner
 				var response = await request.GetAsync();
 
 				items.AddRange(response.CurrentPage);
+				driveItems = response;
 			}
 
 			foreach (var item in items)
@@ -78,10 +86,25 @@ namespace OneDriveCleaner
 						.Items[item.Id]
 						.Children
 						.Request();
-					await ProcessFiles(request);
+					Console.Write("O");
+					await ProcessFiles(request, $"{path}/{item.Name}");
+				}
+				else
+				{
+					var file = new File
+					{
+						Id = item.Id,
+						Name = item.Name,
+						Uri = item.WebUrl,
+						Path = path,
+						Size = item.Size.GetValueOrDefault(),
+						MimeType = item.File?.MimeType,
+						Sha1Hash = item.File?.Hashes?.Sha1Hash
+					};
+					_items.Add(file);
+					Console.Write("o");
 				}
 			}
-			_items.AddRange(items);
 		}
 	}
 }
