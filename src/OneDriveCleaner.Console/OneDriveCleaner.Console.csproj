@@ -4,6 +4,7 @@
 		<OutputType>Exe</OutputType>
 		<TargetFramework>netcoreapp3.1</TargetFramework>
 		<UserSecretsId>062f0552-218f-4ac0-8019-a85d24e9a84d</UserSecretsId>
+		<AssemblyName>onedrive-cleaner</AssemblyName>
 	</PropertyGroup>
 
 	<ItemGroup>

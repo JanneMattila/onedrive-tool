@@ -24,6 +24,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{CF6F0494-7921-43CC-B697-F46800AB4B6C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{687BED3D-9EF7-438F-95F4-188C32736656}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\ci.yml = .github\workflows\ci.yml
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "doc", "doc", "{C28B4796-8A82-4D04-BC53-9939F765F074}"
 EndProject
@@ -35,9 +38,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".devcontainer", ".devcontai
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".vscode", ".vscode", "{CB311C4B-77FC-4407-A2D5-B0E46A7A3AE0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneDriveCleaner", "src\OneDriveCleaner\OneDriveCleaner.csproj", "{9679078F-EAE0-4EB8-8A53-2C46629A7559}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OneDriveCleaner", "src\OneDriveCleaner\OneDriveCleaner.csproj", "{9679078F-EAE0-4EB8-8A53-2C46629A7559}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneDriveCleaner.Console", "src\OneDriveCleaner.Console\OneDriveCleaner.Console.csproj", "{ABB3C66F-C772-4D6C-906F-C6AA42221B70}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OneDriveCleaner.Console", "src\OneDriveCleaner.Console\OneDriveCleaner.Console.csproj", "{ABB3C66F-C772-4D6C-906F-C6AA42221B70}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
