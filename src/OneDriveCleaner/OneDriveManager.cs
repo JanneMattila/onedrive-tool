@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using CsvHelper;
@@ -36,6 +37,15 @@ namespace OneDriveCleaner
 							new AuthenticationHeaderValue("Bearer", _accessToken);
 						return Task.FromResult(0);
 					}));
+		}
+
+		public void Analyze()
+		{
+			using var reader = new StreamReader("files.csv");
+			using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+			_items = csv.GetRecords<File>().ToList();
+
+			Console.WriteLine($"{_items.Count} files to analyze.");
 		}
 
 		public async Task ScanAsync()
