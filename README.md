@@ -1,10 +1,10 @@
-# OneDrive Cleaner
-
+# OneDrive tool
+<!-- 
 ![CI](https://github.com/JanneMattila/onedrive-cleaner/workflows/CI/badge.svg?branch=master)
+-->
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Edit in [Visual Studio Online](https://online.visualstudio.com/environments/new?name=quizmaker&repo=JanneMattila/onedrive-cleaner).
 
 ## Introduction
 
@@ -23,18 +23,17 @@ and then provide means to clean them up.
 Usage instructions:
 
 ```cmd
-# onedrive-cleaner
+# OneDriveTool
   ___             ____       _
  / _ \ _ __   ___|  _ \ _ __(_)_   _____
 | | | | '_ \ / _ \ | | | '__| \ \ / / _ \
 | |_| | | | |  __/ |_| | |  | |\ V /  __/
 \___ /|_| |_|\___|____/|_|  |_| \_/ \___|
-  ____ _
- / ___| | ___  __ _ _ __   ___ _ __
-| |   | |/ _ \/ _` | '_ \ / _ \ '__|
-| |___| |  __/ (_| | | | |  __/ |
- \____|_|\___|\__,_|_| |_|\___|_|
-
+ _              _
+| |_ ___   ___ | |
+| __/ _ \ / _ \| |
+| || (_) | (_) | |
+ \__\___/ \___/|_|
 
 Usage:
         export          Exports to CSV file
@@ -44,11 +43,11 @@ Usage:
 To export your OneDrive content to CSV:
 
 ```cmd
-# onedrive-cleaner export
+# OneDriveTool export
 ```
 
 Analyze exported CSV file:
 
 ```cmd
-# onedrive-cleaner analyze
+# OneDriveTool analyze
 ```

@@ -1,0 +1,70 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34723.18
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E74445DD-28F2-4920-961A-C3778DA73664}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "doc", "doc", "{7B2AAD5E-368D-44EC-9215-418C718128CD}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deploy", "deploy", "{8E178E6A-3786-4105-87DA-7523E146F09C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{70D80D12-0F5B-4966-9543-5304131A9000}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "unit", "unit", "{7F48B88A-6EC7-4AA2-84C5-CAC112F80102}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "release", "release", "{EC9C2024-7F3E-4C94-B592-9BC6A96AB14E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{CF6F0494-7921-43CC-B697-F46800AB4B6C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{687BED3D-9EF7-438F-95F4-188C32736656}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\ci.yml = .github\workflows\ci.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "doc", "doc", "{C28B4796-8A82-4D04-BC53-9939F765F074}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".devcontainer", ".devcontainer", "{05B34AD6-E6F6-4E12-B628-0271E7DCA275}"
+	ProjectSection(SolutionItems) = preProject
+		.devcontainer\devcontainer.json = .devcontainer\devcontainer.json
+		.devcontainer\Dockerfile = .devcontainer\Dockerfile
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".vscode", ".vscode", "{CB311C4B-77FC-4407-A2D5-B0E46A7A3AE0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OneDriveTool", "src\OneDriveTool\OneDriveTool.csproj", "{977636C2-4D92-4986-A2BA-729A2C23E4E1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{977636C2-4D92-4986-A2BA-729A2C23E4E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{977636C2-4D92-4986-A2BA-729A2C23E4E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{977636C2-4D92-4986-A2BA-729A2C23E4E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{977636C2-4D92-4986-A2BA-729A2C23E4E1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7F48B88A-6EC7-4AA2-84C5-CAC112F80102} = {70D80D12-0F5B-4966-9543-5304131A9000}
+		{EC9C2024-7F3E-4C94-B592-9BC6A96AB14E} = {70D80D12-0F5B-4966-9543-5304131A9000}
+		{CF6F0494-7921-43CC-B697-F46800AB4B6C} = {7B2AAD5E-368D-44EC-9215-418C718128CD}
+		{687BED3D-9EF7-438F-95F4-188C32736656} = {CF6F0494-7921-43CC-B697-F46800AB4B6C}
+		{C28B4796-8A82-4D04-BC53-9939F765F074} = {7B2AAD5E-368D-44EC-9215-418C718128CD}
+		{05B34AD6-E6F6-4E12-B628-0271E7DCA275} = {7B2AAD5E-368D-44EC-9215-418C718128CD}
+		{CB311C4B-77FC-4407-A2D5-B0E46A7A3AE0} = {7B2AAD5E-368D-44EC-9215-418C718128CD}
+		{977636C2-4D92-4986-A2BA-729A2C23E4E1} = {E74445DD-28F2-4920-961A-C3778DA73664}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F99521D6-99C8-41D7-83DC-3D5523498EE7}
+	EndGlobalSection
+EndGlobal

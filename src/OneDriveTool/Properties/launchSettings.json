@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "OneDriveTool": {
+      "commandName": "Project",
+      "commandLineArgs": "export"
+    }
+  }
+}

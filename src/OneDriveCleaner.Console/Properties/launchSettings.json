@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "OneDriveCleaner.Console": {
-      "commandName": "Project",
-      "commandLineArgs": "analyze"
-    }
-  }
-}
