@@ -1,29 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net.Http.Headers;
+﻿using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 using Azure.Identity;
 using CsvHelper;
 using CsvHelper.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
-using Microsoft.Identity.Client;
 
 namespace OneDriveTool;
 
 public class OneDriveManager
 {
+	private readonly ILogger<OneDriveManager> _logger;
 	private GraphServiceClient _graphServiceClient;
-	private List<File> _items = new();
+	private List<OneDriveFile> _items = [];
 	private string _driveId;
 
-	public OneDriveManager()
+	public OneDriveManager(ILogger<OneDriveManager> logger)
 	{
+		_logger = logger;
 	}
 
 	public void AuthenticateUsingClient(string clientId)
@@ -39,37 +35,45 @@ public class OneDriveManager
 		_graphServiceClient = new GraphServiceClient(interactiveCredential);
 	}
 
-	public void Analyze()
+	public void Analyze(string file)
 	{
-		using var reader = new StreamReader("files.csv");
-		using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
-		_items = csv.GetRecords<File>().ToList();
+		using var reader = new StreamReader(file);
+		using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.CurrentCulture)
+		{
+			Delimiter = ";",
+			HasHeaderRecord = true,
+			Encoding = Encoding.UTF8
+		});
+		_items = csv.GetRecords<OneDriveFile>().ToList();
 
-		Console.WriteLine($"{_items.Count} files to analyze.");
-		var hashes = new Dictionary<string, List<File>>();
+		_logger.LogInformation("{Count} files to analyze.", _items.Count);
+
+		var hashes = new Dictionary<string, List<OneDriveFile>>();
 		foreach (var item in _items)
 		{
-			if (!hashes.ContainsKey(item.Sha1Hash))
+			if (!hashes.TryGetValue(item.Sha1Hash, out var value))
 			{
-				hashes.Add(item.Sha1Hash, new List<File>());
+				value = ([]);
+				hashes.Add(item.Sha1Hash, value);
 			}
-			hashes[item.Sha1Hash].Add(item);
+
+			value.Add(item);
 		}
 
 		var duplicates = hashes
 			.Where(h => h.Value.Count > 1)
 			.Sum(h => h.Value.Count - 1);
-		Console.WriteLine($"{duplicates} total duplicate files.");
+		_logger.LogInformation("{Duplicates} files to analyze.", duplicates);
 
 		const int top = 25;
 		var topDuplicates = string.Join(", ", hashes
 			.OrderByDescending(h => h.Value.Count)
 			.Select(h => h.Value.Count)
 			.Take(top));
-		Console.WriteLine($"Top {top} duplicate counts: {topDuplicates}.");
+		_logger.LogInformation("Top {Top}  duplicate counts: {TopDuplicates}", top, topDuplicates);
 	}
 
-	public async Task ScanAsync()
+	public async Task ExportAsync(string file)
 	{
 		var start = DateTime.Now;
 		var drive = await _graphServiceClient.Me.Drive.GetAsync();
@@ -81,11 +85,11 @@ public class OneDriveManager
 			.GetAsync();
 
 		var used = Math.Round(drive.Quota.Used.Value / Math.Pow(2, 30), 0);
-		Console.WriteLine($"Drive contains {used} GB of data");
+		_logger.LogInformation("Drive contains {Used} GB of data", used);
 
 		await ProcessFiles(root.Value, string.Empty, 1);
 
-		using var stream = new FileStream("files.csv", FileMode.Create);
+		using var stream = new FileStream(file, FileMode.Create);
 		using var writer = new StreamWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
 		using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.CurrentCulture)
 		{
@@ -94,7 +98,47 @@ public class OneDriveManager
 			Encoding = Encoding.UTF8
 		});
 		csv.WriteRecords(_items);
-		Console.WriteLine($"Scanning took {Math.Ceiling((DateTime.Now - start).TotalSeconds/60)} minutes.");
+		_logger.LogInformation("Scanning took {Time} minutes.", Math.Ceiling((DateTime.Now - start).TotalSeconds / 60));
+	}
+
+	public void Scan(string file, string folder)
+	{
+		using var reader = new StreamReader(file);
+		using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.CurrentCulture)
+		{
+			Delimiter = ";",
+			HasHeaderRecord = true,
+			Encoding = Encoding.UTF8
+		});
+		_items = csv.GetRecords<OneDriveFile>().ToList();
+
+		var hashes = _items.Select(o => o.Sha1Hash).ToHashSet();
+		var localFiles = Directory.GetFiles(folder, "*.*", SearchOption.AllDirectories);
+
+		_logger.LogInformation("{Count} local files to analyze.", localFiles.Length);
+
+		using var sha1 = SHA1.Create();
+		foreach (var item in localFiles)
+		{
+			try
+			{
+				using var fileStream = File.Open(item, FileMode.Open);
+				byte[] hashValue = sha1.ComputeHash(fileStream);
+				var hash = BitConverter.ToString(hashValue).Replace("-", string.Empty);
+				if (hashes.Contains(hash))
+				{
+					_logger.LogInformation("File is already in OneDrive: {File}", item);
+				}
+				else
+				{
+					_logger.LogInformation("New file: {File}", item);
+				}
+			}
+			catch (Exception e)
+			{
+				_logger.LogError(e, "Could not process {File}", item);
+			}
+		}
 	}
 
 	private async Task ProcessFiles(List<DriveItem> items, string path, int level)
@@ -104,7 +148,7 @@ public class OneDriveManager
 		var index = 0;
 		foreach (var fileItem in items.Where(o => o.Folder == null))
 		{
-			var file = new File
+			var file = new OneDriveFile
 			{
 				Id = fileItem.Id,
 				Name = fileItem.Name,
@@ -120,7 +164,7 @@ public class OneDriveManager
 			index++;
 			if (index % 1000 == 0)
 			{
-				Console.WriteLine($"{path}/{fileItem.Name}");
+				_logger.LogInformation("{File}", $"{path}/{fileItem.Name}");
 			}
 		}
 

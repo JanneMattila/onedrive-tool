@@ -2,7 +2,7 @@
 
 namespace OneDriveTool;
 
-public class File
+public class OneDriveFile
 {
 	[Name("ID")]
 	public string Id { get; set; }
