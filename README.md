@@ -23,21 +23,29 @@ and then provide means to clean them up.
 Usage instructions:
 
 ```cmd
-# OneDriveTool
-  ___             ____       _
- / _ \ _ __   ___|  _ \ _ __(_)_   _____
-| | | | '_ \ / _ \ | | | '__| \ \ / / _ \
-| |_| | | | |  __/ |_| | |  | |\ V /  __/
-\___ /|_| |_|\___|____/|_|  |_| \_/ \___|
- _              _
-| |_ ___   ___ | |
-| __/ _ \ / _ \| |
-| || (_) | (_) | |
- \__\___/ \___/|_|
+Description:
+
+    ___             ____       _              _              _
+   / _ \ _ __   ___|  _ \ _ __(_)_   _____   | |_ ___   ___ | |
+  | | | | '_ \ / _ \ | | | '__| \ \ / / _ \  | __/ _ \ / _ \| |
+  | |_| | | | |  __/ |_| | |  | |\ V /  __/  | || (_) | (_) | |
+  \___ /|_| |_|\___|____/|_|  |_| \_/ \___|   \__\___/ \___/|_|
+
+  More information can be found here:
+  https://github.com/JanneMattila/onedrive-tool
 
 Usage:
-        export          Exports to CSV file
-        analyze         Analyzes the CSV file
+  OneDriveTool [options]
+
+Options:
+  -f, --file <file> (REQUIRED)  CSV file to use
+  -e, --export                  Export OneDrive metadata
+  -a, --analyze                 Analyze OneDrive export file
+  -s, --scan <scan>             Scan local folder recursively
+  -sf, --scan-file <scan-file>  Scan result output file
+  --logging <debug|info|trace>  Logging verbosity [default: info]
+  --version                     Show version information
+  -?, -h, --help                Show help and usage information
 ```
 
 To export your OneDrive content to CSV:

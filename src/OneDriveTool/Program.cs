@@ -15,10 +15,6 @@ var builder = new ConfigurationBuilder()
 	.AddUserSecrets<Program>();
 var configuration = builder.Build();
 
-var fileOption = new Option<string>("--file") { Description = "CSV file to use" };
-fileOption.IsRequired = true;
-fileOption.AddAlias("-f");
-
 var exportOption = new Option<bool>("--export") { Description = "Export OneDrive metadata" };
 exportOption.AddAlias("-e");
 
@@ -27,6 +23,9 @@ analyzeOption.AddAlias("-a");
 
 var scanOption = new Option<string>("--scan") { Description = "Scan local folder recursively" };
 scanOption.AddAlias("-s");
+
+var fileOption = new Option<string>("--file") { Description = "CSV file to use" };
+fileOption.AddAlias("-f");
 
 var scanFileOption = new Option<string>("--scan-file") { Description = "Scan result output file" };
 scanFileOption.AddAlias("-sf");
@@ -53,10 +52,10 @@ var rootCommand = new RootCommand(@"
 More information can be found here:
 https://github.com/JanneMattila/onedrive-tool")
 {
-	fileOption,
 	exportOption,
 	analyzeOption,
 	scanOption,
+	fileOption,
 	scanFileOption,
 	loggingOption
 };
@@ -112,11 +111,6 @@ rootCommand.SetHandler(async (export, analyze, scan, file, scanFile, logging) =>
 	}
 	else if (!string.IsNullOrEmpty(scan))
 	{
-		if (!fileExists)
-		{
-			logger.LogError("File '{File}' does not exist.", file);
-			return;
-		}
 		var path = Path.GetFullPath(scan);
 		if (!Directory.Exists(path))
 		{

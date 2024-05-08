@@ -14,7 +14,6 @@ public class OneDriveManager
 {
 	private readonly ILogger<OneDriveManager> _logger;
 	private GraphServiceClient _graphServiceClient;
-	private List<OneDriveFile> _items = [];
 	private string _driveId;
 
 	public OneDriveManager(ILogger<OneDriveManager> logger)
@@ -37,19 +36,12 @@ public class OneDriveManager
 
 	public void Analyze(string file)
 	{
-		using var reader = new StreamReader(file);
-		using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.CurrentCulture)
-		{
-			Delimiter = ";",
-			HasHeaderRecord = true,
-			Encoding = Encoding.UTF8
-		});
-		_items = csv.GetRecords<OneDriveFile>().ToList();
+		List<OneDriveFile> items = ReadOneDriveExportFile(file);
 
-		_logger.LogInformation("{Count} files to analyze.", _items.Count);
+		_logger.LogInformation("{Count} files to analyze.", items.Count);
 
 		var hashes = new Dictionary<string, List<OneDriveFile>>();
-		foreach (var item in _items)
+		foreach (var item in items)
 		{
 			if (!hashes.TryGetValue(item.Sha1Hash, out var value))
 			{
@@ -78,88 +70,73 @@ public class OneDriveManager
 		var start = DateTime.Now;
 		var drive = await _graphServiceClient.Me.Drive.GetAsync();
 		_driveId = drive.Id;
-		var root = await _graphServiceClient
-			.Drives[_driveId]
-			.Items["root"]
-			.Children
-			.GetAsync();
+
+		var childItems = await FetchChildItems("root");
 
 		var used = Math.Round(drive.Quota.Used.Value / Math.Pow(2, 30), 0);
 		_logger.LogInformation("Drive contains {Used} GB of data", used);
 
-		await ProcessFiles(root.Value, string.Empty, 1);
+		List<OneDriveFile> items = [];
+		await ProcessFiles(items, childItems, string.Empty, 1);
 
-		using var stream = new FileStream(file, FileMode.Create);
-		using var writer = new StreamWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
-		using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.CurrentCulture)
-		{
-			Delimiter = ";",
-			HasHeaderRecord = true,
-			Encoding = Encoding.UTF8
-		});
-		csv.WriteRecords(_items);
+		WriteOneDriveExportFile(file, items);
 		_logger.LogInformation("Scanning took {Time} minutes.", Math.Ceiling((DateTime.Now - start).TotalSeconds / 60));
 	}
 
 	public void Scan(string inputFile, string folder, string outputFile)
 	{
-		using var reader = new StreamReader(inputFile);
-		using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.CurrentCulture)
-		{
-			Delimiter = ";",
-			HasHeaderRecord = true,
-			Encoding = Encoding.UTF8
-		});
-		_items = csv.GetRecords<OneDriveFile>().ToList();
+		List<OneDriveFile> items = ReadOneDriveExportFile(inputFile);
 
-		var hashes = _items.Select(o => o.Sha1Hash).ToHashSet();
+		var hashes = items.Select(o => o.Sha1Hash).ToHashSet();
 
-		List<LocalFile> localFiles = [];
-		if (File.Exists(outputFile))
-		{
-			using var outputFileReader = new StreamReader(outputFile);
-			using var outputFileCSV = new CsvReader(outputFileReader, new CsvConfiguration(CultureInfo.CurrentCulture)
-			{
-				Delimiter = ";",
-				HasHeaderRecord = true,
-				Encoding = Encoding.UTF8
-			});
-			localFiles = outputFileCSV.GetRecords<LocalFile>().ToList();
-		}
+		List<LocalFile> localFiles = ReadLocalFile(outputFile);
+
+		_logger.LogInformation("Enumerating files from folder '{Folder}' and all the sub-folders. This might take a while.", folder);
 
 		var files = Directory.GetFiles(folder, "*.*", SearchOption.AllDirectories).ToList();
 
+		var filesToProcess = files.Count;
 		_logger.LogInformation("{Count} local files to analyze.", files.Count);
 
+		var alreadyProcessed = 0;
 		foreach (var alreadyProcessedFile in localFiles)
 		{
 			if (files.Contains(Path.Combine(alreadyProcessedFile.Path, alreadyProcessedFile.Name)))
 			{
 				_logger.LogInformation("File is already processed: {File}", alreadyProcessedFile.Name);
 				files.Remove(Path.Combine(alreadyProcessedFile.Path, alreadyProcessedFile.Name));
+				alreadyProcessed++;
 			}
 		}
 
+		if (alreadyProcessed > 0)
+		{
+			_logger.LogInformation("{AlreadyProcessed} out of {TotalFiles} files processed which is {Percent} %. Still {ToProcess} files to process.",
+				alreadyProcessed, filesToProcess, Math.Round((float)alreadyProcessed / filesToProcess * 100, 0), files.Count);
+		}
 
 		using var sha1 = SHA1.Create();
 		foreach (var item in files)
 		{
 			try
 			{
-				using var fileStream = File.Open(item, FileMode.Open);
+				using var fileStream = File.Open(item, FileMode.Open, FileAccess.Read);
 				byte[] hashValue = sha1.ComputeHash(fileStream);
 				var hash = BitConverter.ToString(hashValue).Replace("-", string.Empty);
 				var inOneDrive = hashes.Contains(hash);
 				if (inOneDrive)
 				{
-					_logger.LogInformation("File is already in OneDrive: {File}", item);
+					_logger.LogInformation("{AlreadyProcessed} / {TotalFiles} - {Percent} %: File is already in OneDrive: {File}",
+						alreadyProcessed, filesToProcess, Math.Round((float)alreadyProcessed / filesToProcess * 100, 0), item);
 				}
 				else
 				{
-					_logger.LogInformation("New inputFile: {File}", item);
+					_logger.LogInformation("{AlreadyProcessed} / {TotalFiles} - {Percent} %: New file: {File}",
+						alreadyProcessed, filesToProcess, Math.Round((float)alreadyProcessed / filesToProcess * 100, 0), item);
 				}
 
-				WriteOutputFile(outputFile, localFiles, item, hash, fileStream.Length, inOneDrive);
+				WriteLocalFile(outputFile, localFiles, item, hash, fileStream.Length, inOneDrive);
+				alreadyProcessed++;
 			}
 			catch (Exception e)
 			{
@@ -168,7 +145,49 @@ public class OneDriveManager
 		}
 	}
 
-	private void WriteOutputFile(string outputFile, List<LocalFile> localFiles, string item, string hash, long length, bool inOneDrive)
+	private List<OneDriveFile> ReadOneDriveExportFile(string inputFile)
+	{
+		using StreamReader reader = new StreamReader(inputFile);
+		using CsvReader csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.CurrentCulture)
+		{
+			Delimiter = ";",
+			HasHeaderRecord = true,
+			Encoding = Encoding.UTF8
+		});
+		return csv.GetRecords<OneDriveFile>().ToList();
+	}
+
+	private void WriteOneDriveExportFile(string file, List<OneDriveFile> items)
+	{
+		using FileStream stream = new FileStream(file, FileMode.Create);
+		using StreamWriter writer = new StreamWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+		using CsvWriter csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.CurrentCulture)
+		{
+			Delimiter = ";",
+			HasHeaderRecord = true,
+			Encoding = Encoding.UTF8
+		});
+		csv.WriteRecords(items);
+	}
+
+	private List<LocalFile> ReadLocalFile(string file)
+	{
+		List<LocalFile> localFiles = [];
+		if (File.Exists(file))
+		{
+			using var outputFileReader = new StreamReader(file);
+			using var outputFileCSV = new CsvReader(outputFileReader, new CsvConfiguration(CultureInfo.CurrentCulture)
+			{
+				Delimiter = ";",
+				HasHeaderRecord = true,
+				Encoding = Encoding.UTF8
+			});
+			localFiles = outputFileCSV.GetRecords<LocalFile>().ToList();
+		}
+		return localFiles;
+	}
+
+	private void WriteLocalFile(string outputFile, List<LocalFile> localFiles, string item, string hash, long length, bool inOneDrive)
 	{
 		var localFile = new LocalFile
 		{
@@ -191,9 +210,9 @@ public class OneDriveManager
 		csv.WriteRecords(localFiles);
 	}
 
-	private async Task ProcessFiles(List<DriveItem> items, string path, int level)
+	private async Task ProcessFiles(List<OneDriveFile> output, List<DriveItem> items, string path, int level)
 	{
-		Console.WriteLine(path);
+		_logger.LogInformation("{Path} - {Count} items", path, items.Count);
 
 		var index = 0;
 		foreach (var fileItem in items.Where(o => o.Folder == null))
@@ -209,7 +228,7 @@ public class OneDriveManager
 				Sha1Hash = fileItem.File?.Hashes?.Sha1Hash,
 				Sha256Hash = fileItem.File?.Hashes?.Sha256Hash
 			};
-			_items.Add(file);
+			output.Add(file);
 
 			index++;
 			if (index % 1000 == 0)
@@ -220,12 +239,29 @@ public class OneDriveManager
 
 		foreach (var folderItem in items.Where(o => o.Folder != null))
 		{
-			var folder = await _graphServiceClient
-				.Drives[_driveId]
-				.Items[folderItem.Id]
-				.Children
-				.GetAsync();
-			await ProcessFiles(folder.Value, $"{path}/{folderItem.Name}", level + 1);
+			var childItems = await FetchChildItems(folderItem.Id);
+
+			await ProcessFiles(output, childItems, $"{path}/{folderItem.Name}", level + 1);
 		}
+	}
+
+	private async Task<List<DriveItem>> FetchChildItems(string id)
+	{
+		var folderResponse = await _graphServiceClient
+			.Drives[_driveId]
+			.Items[id]
+			.Children
+			.GetAsync();
+
+		var items = new List<DriveItem>();
+		var pageIterator = PageIterator<DriveItem, DriveItemCollectionResponse>.CreatePageIterator(_graphServiceClient, folderResponse,
+			(driveItem) =>
+			{
+				items.Add(driveItem);
+				return true;
+			});
+
+		await pageIterator.IterateAsync();
+		return items;
 	}
 }
