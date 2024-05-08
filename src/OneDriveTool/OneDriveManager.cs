@@ -215,7 +215,8 @@ public class OneDriveManager
 		_logger.LogInformation("{Path} - {Count} items", path, items.Count);
 
 		var index = 0;
-		foreach (var fileItem in items.Where(o => o.Folder == null))
+		var files = items.Where(o => o.Folder == null).ToList();
+		foreach (var fileItem in files)
 		{
 			var file = new OneDriveFile
 			{
@@ -231,9 +232,9 @@ public class OneDriveManager
 			output.Add(file);
 
 			index++;
-			if (index % 1000 == 0)
+			if (index % 100 == 0)
 			{
-				_logger.LogInformation("{File}", $"{path}/{fileItem.Name}");
+				_logger.LogInformation("{Index} / {Total}: {File}", index, files.Count, $"{path}/{fileItem.Name}");
 			}
 		}
 

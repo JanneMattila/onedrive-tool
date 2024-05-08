@@ -1,12 +1,9 @@
 # OneDrive tool
-<!-- 
-![CI](https://github.com/JanneMattila/onedrive-cleaner/workflows/CI/badge.svg?branch=master)
--->
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/JanneMattila/onedrive-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/JanneMattila/onedrive-tool/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 
-## Introduction
+## Background
 
 You might end up into situation that you have filled your
 personal OneDrive with many duplicate files. This can
@@ -16,13 +13,16 @@ to different folders. This can eat up your quota quite
 easily. This tool tries to make it easier to find duplicates
 and then provide means to clean them up.
 
-## Usage
+You can also have backup drives or USB sticks and you might
+not be aware if all those files have been successfully uploaded to OneDrive.
 
-![Work-in-progress](https://img.shields.io/badge/warning-work%20in%20progress-red)
+OneDrive tool tries to solve the above problems.
+
+## Usage
 
 Usage instructions:
 
-```cmd
+```
 Description:
 
     ___             ____       _              _              _
@@ -50,12 +50,21 @@ Options:
 
 To export your OneDrive content to CSV:
 
-```cmd
+```powershell
 # OneDriveTool export
+OneDriveTool --export --file onedrive-export.csv
 ```
 
 Analyze exported CSV file:
 
-```cmd
+```powershell
 # OneDriveTool analyze
+OneDriveTool --analyze --file onedrive-export.csv
+```
+
+Scan local folder to see if those files are already in OneDrive:
+
+```powershell
+# OneDriveTool scan
+OneDriveTool --scan D:\\OneDrive --scan-file backup-harddrive1.csv --file onedrive-export.csv
 ```
