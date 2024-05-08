@@ -101,9 +101,9 @@ public class OneDriveManager
 		_logger.LogInformation("Scanning took {Time} minutes.", Math.Ceiling((DateTime.Now - start).TotalSeconds / 60));
 	}
 
-	public void Scan(string file, string folder)
+	public void Scan(string inputFile, string folder, string outputFile)
 	{
-		using var reader = new StreamReader(file);
+		using var reader = new StreamReader(inputFile);
 		using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.CurrentCulture)
 		{
 			Delimiter = ";",
@@ -113,32 +113,82 @@ public class OneDriveManager
 		_items = csv.GetRecords<OneDriveFile>().ToList();
 
 		var hashes = _items.Select(o => o.Sha1Hash).ToHashSet();
-		var localFiles = Directory.GetFiles(folder, "*.*", SearchOption.AllDirectories);
 
-		_logger.LogInformation("{Count} local files to analyze.", localFiles.Length);
+		List<LocalFile> localFiles = [];
+		if (File.Exists(outputFile))
+		{
+			using var outputFileReader = new StreamReader(outputFile);
+			using var outputFileCSV = new CsvReader(outputFileReader, new CsvConfiguration(CultureInfo.CurrentCulture)
+			{
+				Delimiter = ";",
+				HasHeaderRecord = true,
+				Encoding = Encoding.UTF8
+			});
+			localFiles = outputFileCSV.GetRecords<LocalFile>().ToList();
+		}
+
+		var files = Directory.GetFiles(folder, "*.*", SearchOption.AllDirectories).ToList();
+
+		_logger.LogInformation("{Count} local files to analyze.", files.Count);
+
+		foreach (var alreadyProcessedFile in localFiles)
+		{
+			if (files.Contains(Path.Combine(alreadyProcessedFile.Path, alreadyProcessedFile.Name)))
+			{
+				_logger.LogInformation("File is already processed: {File}", alreadyProcessedFile.Name);
+				files.Remove(Path.Combine(alreadyProcessedFile.Path, alreadyProcessedFile.Name));
+			}
+		}
+
 
 		using var sha1 = SHA1.Create();
-		foreach (var item in localFiles)
+		foreach (var item in files)
 		{
 			try
 			{
 				using var fileStream = File.Open(item, FileMode.Open);
 				byte[] hashValue = sha1.ComputeHash(fileStream);
 				var hash = BitConverter.ToString(hashValue).Replace("-", string.Empty);
-				if (hashes.Contains(hash))
+				var inOneDrive = hashes.Contains(hash);
+				if (inOneDrive)
 				{
 					_logger.LogInformation("File is already in OneDrive: {File}", item);
 				}
 				else
 				{
-					_logger.LogInformation("New file: {File}", item);
+					_logger.LogInformation("New inputFile: {File}", item);
 				}
+
+				WriteOutputFile(outputFile, localFiles, item, hash, fileStream.Length, inOneDrive);
 			}
 			catch (Exception e)
 			{
 				_logger.LogError(e, "Could not process {File}", item);
 			}
 		}
+	}
+
+	private void WriteOutputFile(string outputFile, List<LocalFile> localFiles, string item, string hash, long length, bool inOneDrive)
+	{
+		var localFile = new LocalFile
+		{
+			Name = Path.GetFileName(item),
+			Path = Path.GetDirectoryName(item),
+			Size = length,
+			Sha1Hash = hash,
+			InOneDrive = inOneDrive
+		};
+		localFiles.Add(localFile);
+
+		using var stream = new FileStream(outputFile, FileMode.Create);
+		using var writer = new StreamWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+		using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.CurrentCulture)
+		{
+			Delimiter = ";",
+			HasHeaderRecord = true,
+			Encoding = Encoding.UTF8
+		});
+		csv.WriteRecords(localFiles);
 	}
 
 	private async Task ProcessFiles(List<DriveItem> items, string path, int level)

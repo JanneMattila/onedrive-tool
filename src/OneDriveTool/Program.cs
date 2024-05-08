@@ -28,6 +28,9 @@ analyzeOption.AddAlias("-a");
 var scanOption = new Option<string>("--scan") { Description = "Scan local folder recursively" };
 scanOption.AddAlias("-s");
 
+var scanFileOption = new Option<string>("--scan-file") { Description = "Scan result output file" };
+scanFileOption.AddAlias("-sf");
+
 var loggingOption = new Option<string>(
 	"--logging",
 	"Logging verbosity")
@@ -54,10 +57,11 @@ https://github.com/JanneMattila/onedrive-tool")
 	exportOption,
 	analyzeOption,
 	scanOption,
+	scanFileOption,
 	loggingOption
 };
 
-rootCommand.SetHandler(async (export, analyze, scan, file, logging) =>
+rootCommand.SetHandler(async (export, analyze, scan, file, scanFile, logging) =>
 {
 	var loggingLevel = logging switch
 	{
@@ -121,14 +125,14 @@ rootCommand.SetHandler(async (export, analyze, scan, file, logging) =>
 		}
 
 		logger.LogInformation("Run Scan...");
-		manager.Scan(file, path);
+		manager.Scan(file, path, scanFile);
 	}
 	else
 	{
 		Console.WriteLine("Required arguments missing.");
 		Console.WriteLine("Try '--help' for more information.");
 	}
-}, exportOption, analyzeOption, scanOption, fileOption, loggingOption);
+}, exportOption, analyzeOption, scanOption, fileOption, scanFileOption, loggingOption);
 
 await rootCommand.InvokeAsync(args);
 
