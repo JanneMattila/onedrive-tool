@@ -59,11 +59,23 @@ public class OneDriveManager
 		_logger.LogInformation("{Duplicates} duplicate files to analyze.", duplicates);
 
 		const int top = 25;
-		var topDuplicates = string.Join(", ", hashes
+		var duplicateList = hashes
 			.OrderByDescending(h => h.Value.Count)
-			.Select(h => h.Value.Count)
-			.Take(top));
+			.Take(top);
+		var topDuplicates = string.Join(", ", duplicateList.Select(h => h.Value.Count));
 		_logger.LogInformation("Top {Top} duplicate counts: {TopDuplicates}", top, topDuplicates);
+
+		foreach (var item in duplicateList)
+		{
+			_logger.LogInformation("{Count} copies:", item.Value.Count);
+
+			var duplicateFiles = items.Where(o => o.Sha1Hash == item.Key);
+			foreach(var duplicateFile in  duplicateFiles)
+			{
+				_logger.LogInformation("{Path}/{Name}",
+					duplicateFile.Path, duplicateFile.Name);
+			}
+		}
 	}
 
 	public async Task ExportAsync(string file)
