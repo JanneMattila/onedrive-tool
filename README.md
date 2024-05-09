@@ -23,8 +23,6 @@ OneDrive tool tries to solve the above problems.
 Usage instructions:
 
 ```
-Description:
-
     ___             ____       _              _              _
    / _ \ _ __   ___|  _ \ _ __(_)_   _____   | |_ ___   ___ | |
   | | | | '_ \ / _ \ | | | '__| \ \ / / _ \  | __/ _ \ / _ \| |

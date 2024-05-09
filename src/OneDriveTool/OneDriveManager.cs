@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using Azure.Identity;
@@ -38,7 +39,7 @@ public class OneDriveManager
 	{
 		List<OneDriveFile> items = ReadOneDriveExportFile(file);
 
-		_logger.LogInformation("{Count} files to analyze.", items.Count);
+		_logger.LogInformation("{Count} total files to analyze.", items.Count);
 
 		var hashes = new Dictionary<string, List<OneDriveFile>>();
 		foreach (var item in items)
@@ -55,14 +56,14 @@ public class OneDriveManager
 		var duplicates = hashes
 			.Where(h => h.Value.Count > 1)
 			.Sum(h => h.Value.Count - 1);
-		_logger.LogInformation("{Duplicates} files to analyze.", duplicates);
+		_logger.LogInformation("{Duplicates} duplicate files to analyze.", duplicates);
 
 		const int top = 25;
 		var topDuplicates = string.Join(", ", hashes
 			.OrderByDescending(h => h.Value.Count)
 			.Select(h => h.Value.Count)
 			.Take(top));
-		_logger.LogInformation("Top {Top}  duplicate counts: {TopDuplicates}", top, topDuplicates);
+		_logger.LogInformation("Top {Top} duplicate counts: {TopDuplicates}", top, topDuplicates);
 	}
 
 	public async Task ExportAsync(string file)
@@ -254,11 +255,19 @@ public class OneDriveManager
 			.Children
 			.GetAsync();
 
+		var added = 0;
 		var items = new List<DriveItem>();
 		var pageIterator = PageIterator<DriveItem, DriveItemCollectionResponse>.CreatePageIterator(_graphServiceClient, folderResponse,
 			(driveItem) =>
 			{
 				items.Add(driveItem);
+
+				added++;
+
+				if (added % 100 == 0)
+				{
+					_logger.LogInformation("Enumerating {Path} - {Count} items found", driveItem.Name, added);
+				}
 				return true;
 			});
 
