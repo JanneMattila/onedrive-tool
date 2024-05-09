@@ -24,8 +24,8 @@ analyzeOption.AddAlias("-a");
 var scanOption = new Option<string>("--scan") { Description = "Scan local folder recursively" };
 scanOption.AddAlias("-s");
 
-var fileOption = new Option<string>("--file") { Description = "CSV file to use" };
-fileOption.AddAlias("-f");
+var oneDriveFileOption = new Option<string>("--onedrive-file") { Description = "OneDrive CSV file" };
+oneDriveFileOption.AddAlias("-f");
 
 var scanFileOption = new Option<string>("--scan-file") { Description = "Scan result output file" };
 scanFileOption.AddAlias("-sf");
@@ -55,7 +55,7 @@ https://github.com/JanneMattila/onedrive-tool")
 	exportOption,
 	analyzeOption,
 	scanOption,
-	fileOption,
+	oneDriveFileOption,
 	scanFileOption,
 	loggingOption
 };
@@ -126,7 +126,7 @@ rootCommand.SetHandler(async (export, analyze, scan, file, scanFile, logging) =>
 		Console.WriteLine("Required arguments missing.");
 		Console.WriteLine("Try '--help' for more information.");
 	}
-}, exportOption, analyzeOption, scanOption, fileOption, scanFileOption, loggingOption);
+}, exportOption, analyzeOption, scanOption, oneDriveFileOption, scanFileOption, loggingOption);
 
 await rootCommand.InvokeAsync(args);
 

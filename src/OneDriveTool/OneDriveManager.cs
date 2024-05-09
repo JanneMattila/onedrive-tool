@@ -99,6 +99,7 @@ public class OneDriveManager
 	public void Scan(string inputFile, string folder, string outputFile)
 	{
 		List<OneDriveFile> items = ReadOneDriveExportFile(inputFile);
+		_logger.LogInformation("{Count} files in OneDrive.", items.Count);
 
 		var hashes = items.Select(o => o.Sha1Hash).ToHashSet();
 

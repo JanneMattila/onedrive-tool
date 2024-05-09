@@ -36,33 +36,30 @@ Usage:
   OneDriveTool [options]
 
 Options:
-  -f, --file <file> (REQUIRED)  CSV file to use
-  -e, --export                  Export OneDrive metadata
-  -a, --analyze                 Analyze OneDrive export file
-  -s, --scan <scan>             Scan local folder recursively
-  -sf, --scan-file <scan-file>  Scan result output file
-  --logging <debug|info|trace>  Logging verbosity [default: info]
-  --version                     Show version information
-  -?, -h, --help                Show help and usage information
-```
+  -e, --export                         Export OneDrive metadata
+  -a, --analyze                        Analyze OneDrive export file
+  -s, --scan <scan>                    Scan local folder recursively
+  -f, --onedrive-file <onedrive-file>  OneDrive CSV file
+  -sf, --scan-file <scan-file>         Scan result output file
+  --logging <debug|info|trace>         Logging verbosity [default: info]
+  --version                            Show version information
+  -?, -h, --help                       Show help and usage information
+  ```
 
-To export your OneDrive content to CSV:
+To export your OneDrive metadata to CSV:
 
 ```powershell
-# OneDriveTool export
-OneDriveTool --export --file onedrive-export.csv
+OneDriveTool --export --onedrive-file onedrive-export.csv
 ```
 
 Analyze exported CSV file:
 
 ```powershell
-# OneDriveTool analyze
-OneDriveTool --analyze --file onedrive-export.csv
+OneDriveTool --analyze --onedrive-file onedrive-export.csv
 ```
 
 Scan local folder to see if those files are already in OneDrive:
 
 ```powershell
-# OneDriveTool scan
-OneDriveTool --scan D:\\OneDrive --scan-file backup-harddrive1.csv --file onedrive-export.csv
+OneDriveTool --scan D:\\OneDrive --scan-file backup-harddrive1.csv --onedrive-file onedrive-export.csv
 ```
